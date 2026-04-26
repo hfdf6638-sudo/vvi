@@ -24,6 +24,69 @@ local Camera       = Workspace.CurrentCamera
 
 local lp = Players.LocalPlayer
 
+local player = game.Players.LocalPlayer
+
+local function getHumanoid()
+	local char = player.Character or player.CharacterAdded:Wait()
+	return char:WaitForChild("Humanoid")
+end
+
+local humanoid = getHumanoid()
+
+-- زر بسيط
+local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+local ToggleButton = Instance.new("TextButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0, 120, 0, 40)
+ToggleButton.Position = UDim2.new(0.5, -60, 0.8, 0)
+ToggleButton.Text = "DESYNC OFF"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 0, 120) -- بنفسجي
+ToggleButton.TextColor3 = Color3.new(1,1,1)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 14
+
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0,10)
+
+local enabled = false
+local animConnection
+
+local function stopAnims(hum)
+	for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+		track:Stop()
+	end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+	enabled = not enabled
+	humanoid = getHumanoid()
+
+	if enabled then
+		ToggleButton.Text = "DESYNC ON"
+		ToggleButton.BackgroundColor3 = Color3.fromRGB(140, 0, 200) -- بنفسجي أقوى
+
+		stopAnims(humanoid)
+		animConnection = humanoid.AnimationPlayed:Connect(function(t)
+			t:Stop()
+		end)
+
+		if raknet and raknet.desync then
+			raknet.desync(true)
+		end
+	else
+		ToggleButton.Text = "DESYNC OFF"
+		ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 0, 120)
+
+		if animConnection then
+			animConnection:Disconnect()
+			animConnection = nil
+		end
+
+		if raknet and raknet.desync then
+			raknet.desync(false)
+		end
+	end
+end)
+
 local GLOBAL_CONFIG_FILE = "VenomDuel_Config.json"
 local _globalConfig = {}
 
